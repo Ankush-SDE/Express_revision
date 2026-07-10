@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const app = express();
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -24,114 +25,153 @@ const userSchema = new mongoose.Schema({
 // Model
 const User = mongoose.model("User", userSchema);
 
-// POST Method (Save User)
+// =======================
+// POST - Register User
+// =======================
 app.post("/register", async (req, res) => {
     try {
+
         const user = new User(req.body);
         const data = await user.save();
 
         res.status(201).json({
             message: "User Registered Successfully",
-            data
+            data: data
         });
+
     } catch (err) {
+
         res.status(500).json({
             message: err.message
         });
+
     }
 });
 
-// GET Method (Fetch All Users)
+// =======================
+// GET - All Users
+// =======================
 app.get("/users", async (req, res) => {
+
     try {
+
+        // Query Parameter
+        const id = req.query.id;
+
+        if (id) {
+
+            const user = await User.find({ _id: id });
+
+            return res.status(200).json({
+                message: "Data Fetched",
+                data: user
+            });
+
+        }
+
         const users = await User.find();
 
         res.status(200).json({
-            message: "Users Fetched Successfully",
-            users
+            message: "All Users Fetched",
+            totalUsers: users.length,
+            data: users
         });
+
     } catch (err) {
+
         res.status(500).json({
             message: err.message
         });
-    }
-});
-app.get("/api/students/:id", async (req, res) => {
-
-    try {
-
-        const student = await StudentModel.findById(req.params.id);
-
-        if (!student) {
-
-            return res.status(404).json({
-                message: "Student Not Found"
-            });
-
-        }
-
-        res.status(200).json({
-            message: "Student Found",
-            data: student
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            message: error.message
-        });
 
     }
 
 });
+
+// =======================
+// GET User By Route Param
+// =======================
 app.get("/users/:id", async (req, res) => {
+
     try {
+
         const user = await User.findById(req.params.id);
 
         if (!user) {
+
             return res.status(404).json({
-                message: "hello"
+                message: "User Not Found"
             });
+
         }
 
         res.status(200).json({
-            message: "Data fetched",
+            message: "User Found",
             data: user
         });
 
     } catch (err) {
+
         res.status(500).json({
             message: err.message
         });
+
     }
+
 });
-// DELETE User
-app.delete("/users/:id", async (req, res) => {
+
+// =======================
+// UPDATE User
+// =======================
+app.put("/users/:id", async (req, res) => {
+
     try {
 
-        const deletedUser = await User.findByIdAndDelete(req.params.id);
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true }
+        );
 
-        if (!deletedUser) {
-            return res.status(404).json({
-                message: "User Not Found"
-            });
-        }
+        res.status(200).json({
+            message: "User Updated Successfully",
+            data: user
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            message: err.message
+        });
+
+    }
+
+});
+
+// =======================
+// DELETE User
+// =======================
+app.delete("/users/:id", async (req, res) => {
+
+    try {
+
+        const user = await User.findByIdAndDelete(req.params.id);
 
         res.status(200).json({
             message: "User Deleted Successfully",
-            data: deletedUser
+            data: user
         });
 
-    } catch (error) {
+    } catch (err) {
 
         res.status(500).json({
-            message: error.message
+            message: err.message
         });
 
     }
+
 });
 
 // Server
 app.listen(3000, () => {
-    console.log("Server running on port 3000");
+    console.log("Server Running on Port 3000");
 });

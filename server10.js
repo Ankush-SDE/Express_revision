@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 
 const app = express();
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -24,55 +25,18 @@ const userSchema = new mongoose.Schema({
 // Model
 const User = mongoose.model("User", userSchema);
 
-// POST Method (Save User)
+// ===========================
+// CREATE USER
+// ===========================
 app.post("/register", async (req, res) => {
     try {
+
         const user = new User(req.body);
         const data = await user.save();
 
         res.status(201).json({
             message: "User Registered Successfully",
-            data
-        });
-    } catch (err) {
-        res.status(500).json({
-            message: err.message
-        });
-    }
-});
-
-// GET Method (Fetch All Users)
-app.get("/users", async (req, res) => {
-    try {
-        const users = await User.find();
-
-        res.status(200).json({
-            message: "Users Fetched Successfully",
-            users
-        });
-    } catch (err) {
-        res.status(500).json({
-            message: err.message
-        });
-    }
-});
-app.get("/api/students/:id", async (req, res) => {
-
-    try {
-
-        const student = await StudentModel.findById(req.params.id);
-
-        if (!student) {
-
-            return res.status(404).json({
-                message: "Student Not Found"
-            });
-
-        }
-
-        res.status(200).json({
-            message: "Student Found",
-            data: student
+            data: data
         });
 
     } catch (error) {
@@ -82,30 +46,97 @@ app.get("/api/students/:id", async (req, res) => {
         });
 
     }
-
 });
+
+// ===========================
+// GET ALL USERS
+// ===========================
+app.get("/users", async (req, res) => {
+    try {
+
+        const users = await User.find();
+
+        res.status(200).json({
+            message: "Users Fetched Successfully",
+            totalUsers: users.length,
+            data: users
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+});
+
+// ===========================
+// GET USER BY ID
+// ===========================
 app.get("/users/:id", async (req, res) => {
     try {
+
         const user = await User.findById(req.params.id);
 
         if (!user) {
             return res.status(404).json({
-                message: "hello"
+                message: "User Not Found"
             });
         }
 
         res.status(200).json({
-            message: "Data fetched",
+            message: "User Found",
             data: user
         });
 
-    } catch (err) {
+    } catch (error) {
+
         res.status(500).json({
-            message: err.message
+            message: error.message
         });
+
     }
 });
-// DELETE User
+
+// ===========================
+// UPDATE USER
+// ===========================
+app.put("/users/:id", async (req, res) => {
+    try {
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            {
+                new: true,
+                runValidators: true
+            }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                message: "User Not Found"
+            });
+        }
+
+        res.status(200).json({
+            message: "User Updated Successfully",
+            data: updatedUser
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+});
+
+// ===========================
+// DELETE USER
+// ===========================
 app.delete("/users/:id", async (req, res) => {
     try {
 
@@ -130,8 +161,33 @@ app.delete("/users/:id", async (req, res) => {
 
     }
 });
+app.delete("/users/:id", async (req, res) => {
+    console.log(req.params.id);
+
+    const deletedUser = await User.findByIdAndDelete(req.params.id);
+
+    console.log(deletedUser);
+
+    if (!deletedUser) {
+        return res.status(404).json({
+            message: "User Not Found"
+        });
+    }
+
+    res.json({
+        message: "User Deleted Successfully",
+        data: deletedUser
+    });
+});
+
+// Home Route
+app.get("/", (req, res) => {
+    res.send("User API Running...");
+});
 
 // Server
-app.listen(3000, () => {
-    console.log("Server running on port 3000");
+const PORT = 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server Running on Port ${PORT}`);
 });
